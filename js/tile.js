@@ -25,3 +25,8 @@ Tile.prototype.serialize = function () {
     value: this.value
   };
 };
+
+Tile.prototype.clone = function() {
+  newTile = new Tile({ x: this.x, y: this.y }, this.value);
+  return newTile;
+}

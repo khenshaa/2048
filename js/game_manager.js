@@ -9,6 +9,28 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
+//############################
+  this.inputManager.on("autoRun", function() {
+    // if game->terminated do Restart 
+    if (this.isGameTerminated()) {
+      this.restart();
+    }
+    var autoRunButton = document.querySelector(".ai-solver-button");
+    if (this.running) {
+      this.running = false;
+      autoRunButton.innerHTML = "Auto-Run";
+    }
+    else {
+      this.running = true;
+      autoRunButton.innerHTML = "Stop";
+      // pilih algoritma
+      var algoOption = document.querySelector(".algorithm");
+      this.ai.algorithm = algoOption.value;
+      var depthLimit = document.querySelector(".depth-limit");
+      this.ai.depthlimit = parseInt(depthLimit.value);
+      this.autoRun();
+    }
+  }.bind(this));
 
   this.setup();
 }
@@ -24,7 +46,23 @@ GameManager.prototype.restart = function () {
 GameManager.prototype.keepPlaying = function () {
   this.keepPlaying = true;
   this.actuator.continueGame(); // Clear the game won/lost message
+  if (this.running) {
+    this.autoRun();
+  }
 };
+
+// Auto run
+GameManager.prototype.autoRun = function () {
+  var currentMove = this.ai.getBestMove();
+  this.move(currentMove);
+  if (this.isGameTerminated()) {
+    document.querySelector(".ai-solver-button").innerHTML = "Auto-Run";
+  }
+  else if (this.running) {
+    var self = this;
+    setTimeout(function(){self.autoRun();}, animationDelay);
+  }
+}
 
 // Return true if the game is lost, or has won and the user hasn't kept playing
 GameManager.prototype.isGameTerminated = function () {
@@ -53,6 +91,12 @@ GameManager.prototype.setup = function () {
     // Add the initial tiles
     this.addStartTiles();
   }
+
+  // The AI
+  this.ai = new AI(this.grid);
+
+  // auto run status
+  this.running = false;
 
   // Update the actuator
   this.actuate();
@@ -84,6 +128,20 @@ GameManager.prototype.actuate = function () {
   // Clear the state when the game is over (game over only, not win)
   if (this.over) {
     this.storageManager.clearGameState();
+
+    if (this.running) {
+      // Add statistics
+      //var table = document.querySelector(".statistics");
+      //var length = table.rows.length;
+      //var newRow = table.insertRow(length);
+      //newRow.insertCell(0).innerHTML = length;
+      //newRow.insertCell(1).innerHTML = this.grid.largest();
+      //newRow.insertCell(2).innerHTML = this.score;
+      //retry game automatically
+      //this.restart();
+      //this.running = true;
+      //this.autoRun();
+    }
   } else {
     this.storageManager.setGameState(this.serialize());
   }
@@ -95,7 +153,6 @@ GameManager.prototype.actuate = function () {
     bestScore:  this.storageManager.getBestScore(),
     terminated: this.isGameTerminated()
   });
-
 };
 
 // Represent the current game as an object
@@ -167,7 +224,7 @@ GameManager.prototype.move = function (direction) {
           self.score += merged.value;
 
           // The mighty 2048 tile
-          if (merged.value === 2048) self.won = true;
+          // if (merged.value === 2048) self.won = true;
         } else {
           self.moveTile(tile, positions.farthest);
         }

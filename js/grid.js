@@ -115,3 +115,177 @@ Grid.prototype.serialize = function () {
     cells: cellState
   };
 };
+
+
+// Additional Functions below here
+
+// Create a new copy of current Grid
+Grid.prototype.clone = function() {
+  newGrid = new Grid(this.size);
+  for (var x = 0; x < this.size; x++) {
+    for (var y = 0; y < this.size; y++) {
+      if (this.cells[x][y]) {
+        newGrid.insertTile(this.cells[x][y].clone());
+      }
+    }
+  }
+  return newGrid;
+};
+
+// Move tiles on the grid in the specified direction
+// Return value is the score gained from the move
+// Copy of GameManager.move
+Grid.prototype.move = function (direction) {
+  // 0: up, 1: right, 2: down, 3: left
+  var self = this;
+
+  var cell, tile;
+
+  var vector     = this.getVector(direction);
+  var traversals = this.buildTraversals(vector);
+  var moved      = false;
+  var score      = 0;
+
+  // Save the current tile positions and remove merger information
+  this.prepareTiles();
+
+  // Traverse the grid in the right direction and move tiles
+  traversals.x.forEach(function (x) {
+    traversals.y.forEach(function (y) {
+      cell = { x: x, y: y };
+      tile = self.cellContent(cell);
+
+      if (tile) {
+        var positions = self.findFarthestPosition(cell, vector);
+        var next      = self.cellContent(positions.next);
+
+        // Only one merger per row traversal?
+        if (next && next.value === tile.value && !next.mergedFrom) {
+          var merged = new Tile(positions.next, tile.value * 2);
+          merged.mergedFrom = [tile, next];
+
+          self.insertTile(merged);
+          self.removeTile(tile);
+
+          // Converge the two tiles' positions
+          tile.updatePosition(positions.next);
+
+          // Update the score
+          score += merged.value;
+
+        } else {
+          self.moveTile(tile, positions.farthest);
+        }
+
+        if (!self.positionsEqual(cell, tile)) {
+          moved = true; // The tile moved from its original cell!
+        }
+      }
+    });
+  });
+
+  if (!moved) score = -1;
+  return score;
+};
+
+// Save all tile positions and remove merger info
+// Copy of GameManager.prepareTiles
+Grid.prototype.prepareTiles = function () {
+  this.eachCell(function (x, y, tile) {
+    if (tile) {
+      tile.mergedFrom = null;
+      tile.savePosition();
+    }
+  });
+};
+
+// Move a tile and its representation
+// Copy of GameManager.moveTile
+Grid.prototype.moveTile = function (tile, cell) {
+  this.cells[tile.x][tile.y] = null;
+  this.cells[cell.x][cell.y] = tile;
+  tile.updatePosition(cell);
+};
+
+// Get the vector representing the chosen direction
+// Copy of GameManager.getVector
+Grid.prototype.getVector = function (direction) {
+  // Vectors representing tile movement
+  var map = {
+    0: { x: 0,  y: -1 }, // Up
+    1: { x: 1,  y: 0 },  // Right
+    2: { x: 0,  y: 1 },  // Down
+    3: { x: -1, y: 0 }   // Left
+  };
+
+  return map[direction];
+};
+
+// Build a list of positions to traverse in the right order
+// Copy of GameManager.buildTraversals
+Grid.prototype.buildTraversals = function (vector) {
+  var traversals = { x: [], y: [] };
+
+  for (var pos = 0; pos < this.size; pos++) {
+    traversals.x.push(pos);
+    traversals.y.push(pos);
+  }
+
+  // Always traverse from the farthest cell in the chosen direction
+  if (vector.x === 1) traversals.x = traversals.x.reverse();
+  if (vector.y === 1) traversals.y = traversals.y.reverse();
+
+  return traversals;
+};
+
+// Copy of GameManager.findFarthestPosition
+Grid.prototype.findFarthestPosition = function (cell, vector) {
+  var previous;
+
+  // Progress towards the vector direction until an obstacle is found
+  do {
+    previous = cell;
+    cell     = { x: previous.x + vector.x, y: previous.y + vector.y };
+  } while (this.withinBounds(cell) &&
+           this.cellAvailable(cell));
+
+  return {
+    farthest: previous,
+    next: cell // Used to check if a merge is required
+  };
+};
+
+// Copy of GameManager.positionsEqual
+Grid.prototype.positionsEqual = function (first, second) {
+  return first.x === second.x && first.y === second.y;
+};
+
+// Check if two grid are equal
+Grid.prototype.equals = function(grid) {
+  for (var x = 0; x < this.size; x++) {
+    for (var y = 0; y < this.size; y++) {
+      if (!!this.cells[x][y] && !!grid.cells[x][y]) {
+        if (this.cells[x][y].value != grid.cells[x][y].value) {
+          return false;
+        }
+      }
+      if (!!this.cells[x][y] != !!grid.cells[x][y]) {
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
+// Find largest value in grid
+Grid.prototype.largest = function() {
+  var largest = 0;
+  this.eachCell(function(x, y, cell) {
+    if (!!cell) {
+      if (cell.value > largest) {
+        largest = cell.value;
+      }
+    }
+  });
+  return largest;
+};

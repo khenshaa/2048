@@ -72,16 +72,40 @@
       </div>
     </div>
 
+    <div class="ai-block">
+      <div style="width: 350px; float: left" class="ai-options">
+        <div style="margin: 5px; padding: 5px">
+          <label>Select Algorithm </label>
+          <select style="float:right" class="algorithm">
+            <option value="minimax">Minimax Algorithm</option>
+            <option value="expectimax">Expectimax Algorithm</option>
+          </select>
+        </div>
+        <div style="margin: 5px; padding: 5px">
+          <label>Depth Limit </label>
+          <input class="depth-limit" style="float:right" type="number" min="1" max="10" value="3">
+        </div>
+      </div>
+      <div style="float:right; padding-top: 20px">
+        <a class="ai-solver-button">Auto-Run</a>
+      </div>
+    </div>
+
+    
+
     <p class="game-explanation">
       <strong class="important">How to play:</strong> Use your <strong>arrow keys</strong> to move the tiles. When two tiles with the same number touch, they <strong>merge into one!</strong>
     </p>
     <hr>
     <p>
-    <strong class="important">Note:</strong> This site is the official version of 2048. You can play it on your phone via <a href="http://git.io/2048">http://git.io/2048.</a> All other apps or sites are derivatives or fakes, and should be used with caution.
+    <strong class="important">Note:</strong> This is not the official 2048. The original 2048 can be found <a href="http://git.io/2048">here</a>.
     </p>
     <hr>
     <p>
-    Created by <a href="http://gabrielecirulli.com" target="_blank">Gabriele Cirulli.</a> Based on <a href="https://itunes.apple.com/us/app/1024!/id823499224" target="_blank">1024 by Veewo Studio</a> and conceptually similar to <a href="http://asherv.com/threes/" target="_blank">Threes by Asher Vollmer.</a>
+    Created by <a href="http://gabrielecirulli.com" target="_blank">Gabriele Cirulli.</a> Based on <a href="https://itunes.apple.com/us/app/1024!/id823499224" target="_blank">1024 by Veewo Studio</a> and conceptually similar to <a href="http://asherv.com/threes/" target="_blank">Threes by Asher Vollmer</a>.
+    </p> 
+    <p>
+    AI created by Rayza Al Khensha </a>, get idea from <a href="http://ov3y.github.io/2048-AI/">the original AI of 2048</a> and <a href="http://stackoverflow.com/questions/22342854/what-is-the-optimal-algorithm-for-the-game-2048/22389702">this thread.</a>.
     </p>
   </div>
 
@@ -95,5 +119,6 @@
   <script src="js/local_storage_manager.js"></script>
   <script src="js/game_manager.js"></script>
   <script src="js/application.js"></script>
+  <script src="js/ai.js"></script>
 </body>
 </html>
